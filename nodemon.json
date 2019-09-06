@@ -1,0 +1,7 @@
+{
+  "events": {
+    "restart": "npm run build"
+  },
+  "watch" : ["src/**/*"],
+  "ext" : "ts"
+}
