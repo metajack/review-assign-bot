@@ -11,6 +11,16 @@ export = (app: Application) => {
       throw new Error('configuration failed to load');
     }
 
+    // Do nothing if there is already a review request
+    const pr_number = context.payload.pull_request.number;
+    const review_requests = await context.github.pullRequests.listReviewRequests(
+      context.repo({number: pr_number}));
+    if (review_requests.data.users && review_requests.data.users.length > 0) {
+      context.log("skipping review assignment due to existing review request");
+      return;
+    }
+
+    // Assign a random reviewer from the list (minus the PR author)
     const pr_owner = context.payload.pull_request.user.login;
     const available_reviewers = config.reviewers.filter(i => i !== pr_owner);
     if (available_reviewers.length > 0) {
@@ -23,6 +33,7 @@ export = (app: Application) => {
   app.on('issue_comment.created', async (context: Context) => {
     // Ignore bot comments
     if (context.payload.comment.user.type === "Bot") {
+      context.log("ignoring bot comment");
       return;
     }
 
